@@ -1,0 +1,15 @@
+# 1. 빌드 결과물 및 임시 파일 (찌꺼기)
+[Bb]in/
+[Oo]bj/
+
+# 2. Visual Studio 사용자 설정 (숨김 폴더)
+.vs/
+*.user
+
+# 3. 보안 및 로컬 설정 파일 (절대 올리면 안 됨)
+appsettings.Development.json
+.env
+
+# 4. 기타 시스템 파일
+.DS_Store
+Thumbs.db

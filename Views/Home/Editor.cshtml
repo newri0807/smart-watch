@@ -1,0 +1,678 @@
+@{
+    ViewData["Title"] = "Editor";
+}
+
+<div class="app-header">
+    <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> 뒤로</a>
+    <span class="page-title">시계 화면 꾸미기</span>
+    <div style="width: 40px;"></div>
+</div>
+
+<div class="editor-container">
+
+    <div class="preview-wrapper">
+        <div id="canvasBox" class="canvas-box">
+            <canvas id="mainCanvas"></canvas>
+
+            <div id="weatherLayer" class="weather-widget-drag" style="top: 20px; left: 20px;">
+                <img id="weatherIcon" src="https://openweathermap.org/img/wn/02d@2x.png" alt="weather" class="w-icon">
+                <div class="w-info">
+                    <span id="weatherTemp">--°</span>
+                    <span id="weatherCity">Location</span>
+                </div>
+            </div>
+
+            <div id="dragText" class="draggable-text">문구 입력</div>
+        </div>
+        <p class="guide-msg"><i class="fas fa-hand-pointer"></i> <b>문구</b>와 <b>날씨</b>를 드래그해서 위치를 잡으세요</p>
+    </div>
+
+    <div class="settings-panel">
+
+        <div class="setting-card">
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-map-marker-alt"></i> 위치 및 날씨</span>
+                <button onclick="openLocationModal()" class="btn-sm-outline">위치 변경</button>
+            </div>
+            <div style="font-size:0.9rem; color:#666;">
+                현재 지역: <strong id="currentLocationName" style="color:#4a90e2;">서울</strong>
+            </div>
+        </div>
+
+        <div class="setting-card">
+            <div class="card-title"><i class="fas fa-image"></i> 배경 이미지</div>
+            <div class="control-row">
+                <label for="bgImageInput" class="custom-file-upload">
+                    <i class="fas fa-camera"></i> 새 사진 불러오기
+                </label>
+                <input type="file" id="bgImageInput" accept="image/*" onchange="handleImage(this)" />
+            </div>
+            <div class="control-row" style="flex-direction: column; align-items: flex-start;">
+                <label class="sub-label">픽셀화 강도 (<span id="pixelValDisplay">10</span>)</label>
+                <input type="range" id="pixelRange" min="1" max="30" value="10" step="1" class="custom-range"
+                    oninput="renderCanvas()" />
+            </div>
+        </div>
+
+        <div class="setting-card">
+            <div class="card-title"><i class="fas fa-font"></i> 텍스트 & 시간</div>
+            <div class="control-row">
+                <input type="text" id="messageInput" class="custom-input" placeholder="문구를 입력하세요"
+                    oninput="updateText()" />
+            </div>
+            <div class="control-row">
+                <label class="sub-label">글자 크기</label>
+                <input type="range" id="fontSizeRange" min="16" max="60" value="24" class="custom-range"
+                    style="width: 60%;" oninput="updateText()" />
+                <span id="fontSizeDisplay" style="font-size:0.8rem; color:#666;">24px</span>
+            </div>
+            <div class="control-row">
+                <label class="sub-label">글자색</label>
+                <input type="color" id="textColorInput" value="#ffffff" class="color-picker" oninput="updateText()" />
+            </div>
+            <div class="separator"></div>
+            <div class="control-row">
+                <label class="sub-label"><i class="fas fa-clock"></i> 알람 시간</label>
+                <input type="time" id="alarmTime" class="custom-input time-input" />
+            </div>
+        </div>
+
+        <button onclick="saveData()" class="save-btn-bottom">저장 하기</button>
+    </div>
+</div>
+
+<input type="hidden" id="editId" />
+
+<style>
+    .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-bottom: 1px solid #eee;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        height: 50px;
+    }
+
+    .page-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #333;
+    }
+
+    .back-btn {
+        text-decoration: none;
+        color: #333;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .editor-container {
+        background: #f4f4f8;
+        min-height: calc(100vh - 50px);
+        padding-bottom: 40px;
+    }
+
+    .preview-wrapper {
+        background: #e0e0e0;
+        padding: 30px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: inset 0 -10px 10px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    .canvas-box {
+        width: 300px;
+        height: 300px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        image-rendering: pixelated;
+    }
+
+    /* 날씨 위젯 */
+    .weather-widget-drag {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        padding: 5px 12px;
+        border-radius: 20px;
+        color: white;
+        cursor: grab;
+        z-index: 20;
+        user-select: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .weather-widget-drag:active {
+        cursor: grabbing;
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.05);
+    }
+
+    .w-icon {
+        width: 36px;
+        height: 36px;
+        display: block;
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+    }
+
+    .w-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+    }
+
+    #weatherTemp {
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    #weatherCity {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        font-weight: 400;
+        margin-top: 2px;
+    }
+
+    .draggable-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: 900;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        white-space: nowrap;
+        cursor: grab;
+        user-select: none;
+        z-index: 10;
+    }
+
+    .draggable-text:active {
+        cursor: grabbing;
+    }
+
+    .guide-msg {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 15px;
+    }
+
+    .settings-panel {
+        padding: 20px;
+    }
+
+    .setting-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #444;
+        margin-bottom: 15px;
+    }
+
+    .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .sub-label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 600;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .custom-file-upload {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+        background: #f0f2f5;
+        color: #333;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        border: 1px dashed #ccc;
+    }
+
+    .custom-range {
+        width: 100%;
+        margin-top: 10px;
+        accent-color: #4a90e2;
+    }
+
+    .range-labels {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 5px;
+    }
+
+    .custom-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 1rem;
+        background: #f9f9f9;
+        box-sizing: border-box;
+    }
+
+    .color-picker {
+        border: none;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        background: none;
+        cursor: pointer;
+    }
+
+    .separator {
+        height: 1px;
+        background: #eee;
+        margin: 15px 0;
+    }
+
+    .save-btn-bottom {
+        width: 100%;
+        background: #4a90e2;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: bold;
+        padding: 16px;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        margin-top: 10px;
+        transition: background 0.2s;
+    }
+
+    .save-btn-bottom:active {
+        background: #357abd;
+        transform: scale(0.98);
+    }
+
+    .btn-sm-outline {
+        background: none;
+        border: 1px solid #4a90e2;
+        color: #4a90e2;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    const API_KEY = '@ViewData["WeatherApiKey"]';
+
+    let currentImg = new Image();
+    let originalImgSrc = null;
+    let isImageLoaded = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initEditor();
+
+        // 1. 먼저 URL에 id가 있는지 확인 (편집 모드인지?)
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('id');
+
+        if (editId) {
+            // 2. 편집 모드라면 -> 저장된 데이터(위치 포함)를 불러옴
+            checkEditMode(editId);
+        } else {
+            // 3. 새 만들기라면 -> 기본(마지막) 위치 날씨 로드
+            loadWeather();
+        }
+    });
+
+    // === 1. 날씨 로직 ===
+    function loadWeather() {
+        const savedCity = localStorage.getItem('userCity') || 'Seoul';
+
+        if (savedCity === 'Auto') {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => fetchWeather(`lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`),
+                    () => fetchWeather(`q=Seoul`)
+                );
+            } else {
+                fetchWeather(`q=Seoul`);
+            }
+        } else {
+            fetchWeather(`q=${savedCity}`);
+        }
+    }
+
+    // 특정 도시 날씨 로드 함수
+    function getWeatherByCity(city) {
+        fetchWeather(`q=${city}`);
+    }
+
+    async function fetchWeather(query) {
+        if (!API_KEY) {
+            updateWeatherUI("Seoul", 22, "01d");
+            return;
+        }
+
+        try {
+            const url = `https://api.openweathermap.org/data/2.5/weather?${query}&appid=${API_KEY}&units=metric&lang=kr`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Weather Error");
+            const data = await res.json();
+
+            updateWeatherUI(data.name, Math.round(data.main.temp), data.weather[0].icon);
+        } catch (e) {
+            console.error("날씨 로드 실패", e);
+        }
+    }
+
+    function updateWeatherUI(city, temp, iconCode) {
+        const tempEl = document.getElementById('weatherTemp');
+        const cityEl = document.getElementById('weatherCity');
+        const locNameEl = document.getElementById('currentLocationName');
+        const iconEl = document.getElementById('weatherIcon');
+        const layer = document.getElementById('weatherLayer');
+
+        if (tempEl) tempEl.innerText = `${temp}°`;
+        if (cityEl) cityEl.innerText = city;
+        if (locNameEl) locNameEl.innerText = city;
+
+        if (iconEl && iconCode) {
+            iconEl.src = `https://openweathermap.org/img/wn/${iconCode}@@2x.png`;
+        }
+
+        // 날씨 정보가 업데이트되면 위젯을 보여줌
+        if (layer) layer.style.display = 'flex';
+    }
+
+    // === 2. 위치 모달 ===
+    function openLocationModal() {
+        if (typeof showModal === 'function') {
+            const content = `
+                <div style="text-align:center;">
+                    <button onclick="useAutoLocation()" class="btn-primary" style="width:100%; margin-bottom:15px;">
+                        <i class="fas fa-crosshairs"></i> 내 위치 자동 찾기
+                    </button>
+                    <label style="display:block; text-align:left; font-weight:bold;">도시 이름 (영어)</label>
+                    <input type="text" id="cityInput" class="form-control" style="margin-top:5px;" placeholder="Ex: Seoul, Busan">
+                </div>
+            `;
+            showModal('위치 설정', content, () => {
+                const newCity = document.getElementById('cityInput').value;
+                if (newCity) {
+                    localStorage.setItem('userCity', newCity);
+                    getWeatherByCity(newCity);
+                    return true;
+                }
+                return false;
+            }, true);
+        }
+    }
+
+    window.useAutoLocation = function () {
+        localStorage.setItem('userCity', 'Auto');
+        loadWeather();
+        closeModal();
+    };
+
+    // === 3. 에디터 로직 ===
+    function initEditor() {
+        const canvas = document.getElementById('mainCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = 300; canvas.height = 300;
+        resetCanvas(ctx);
+        enableDrag(document.getElementById('dragText'));
+        enableDrag(document.getElementById('weatherLayer'));
+    }
+
+    function resetCanvas(ctx) {
+        ctx.clearRect(0, 0, 300, 300);
+        ctx.fillStyle = "#eeeeee";
+        ctx.fillRect(0, 0, 300, 300);
+    }
+
+    function handleImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            originalImgSrc = e.target.result;
+            currentImg.src = originalImgSrc;
+            currentImg.onload = function () {
+                isImageLoaded = true;
+                const c = document.getElementById('mainCanvas');
+                if (c) {
+                    resetCanvas(c.getContext('2d'));
+                    renderCanvas();
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderCanvas() {
+        if (!isImageLoaded) return;
+        const canvas = document.getElementById('mainCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const pixelRangeVal = document.getElementById('pixelRange')?.value || 10;
+        const disp = document.getElementById('pixelValDisplay');
+        if (disp) disp.innerText = pixelRangeVal;
+
+        resetCanvas(ctx);
+        const w = canvas.width / pixelRangeVal;
+        const h = canvas.height / pixelRangeVal;
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = w; tempCanvas.height = h;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(currentImg, 0, 0, w, h);
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.drawImage(tempCanvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+    }
+
+    function updateText() {
+        const textDiv = document.getElementById('dragText');
+        const msg = document.getElementById('messageInput').value;
+        const color = document.getElementById('textColorInput').value;
+        const fontSize = document.getElementById('fontSizeRange').value;
+
+        if (textDiv) {
+            textDiv.innerText = msg || "문구 입력";
+            textDiv.style.color = color;
+            textDiv.style.fontSize = fontSize + "px";
+        }
+        const fsDisp = document.getElementById('fontSizeDisplay');
+        if (fsDisp) fsDisp.innerText = fontSize + "px";
+    }
+
+    function enableDrag(elmnt) {
+        if (!elmnt) return;
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        elmnt.onmousedown = dragStart; elmnt.ontouchstart = dragStart;
+
+        function dragStart(e) {
+            if (e.cancelable) e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            pos3 = clientX; pos4 = clientY;
+            document.onmouseup = dragEnd; document.onmousemove = dragMove;
+            document.ontouchend = dragEnd; document.ontouchmove = dragMove;
+            elmnt.style.cursor = 'grabbing';
+        }
+        function dragMove(e) {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            pos1 = pos3 - clientX; pos2 = pos4 - clientY;
+            pos3 = clientX; pos4 = clientY;
+            if (elmnt.style.transform) elmnt.style.transform = 'none';
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+        function dragEnd() {
+            document.onmouseup = null; document.onmousemove = null;
+            document.ontouchend = null; document.ontouchmove = null;
+            elmnt.style.cursor = 'grab';
+        }
+    }
+
+    function saveData() {
+        const currentUser = localStorage.getItem('user');
+        if (!currentUser) {
+            alertModal("로그인이 필요합니다.", () => window.location.href = '/Home/Login');
+            return;
+        }
+
+        // 유저별 키 설정
+        const storageKey = 'watchList_' + currentUser;
+        const id = document.getElementById('editId').value;
+        const alarmTime = document.getElementById('alarmTime').value;
+
+        if (!alarmTime) {
+            alertModal('알람 시간을 설정해주세요!');
+            return;
+        }
+
+        const textEl = document.getElementById('dragText');
+        const weatherEl = document.getElementById('weatherLayer');
+        const canvas = document.getElementById('mainCanvas');
+        const thumbnail = isImageLoaded ? canvas.toDataURL('image/jpeg', 0.8) : null;
+
+        // 저장 시점의 날씨 데이터 스냅샷
+        const weatherTemp = document.getElementById('weatherTemp').innerText;
+        const weatherCity = document.getElementById('weatherCity').innerText;
+        const weatherIconSrc = document.getElementById('weatherIcon').src;
+
+        const dataObj = {
+            id: id ? parseInt(id) : Date.now(),
+            imgSrc: originalImgSrc,
+            thumbnailSrc: thumbnail,
+            pixelVal: document.getElementById('pixelRange').value,
+            alarm: alarmTime,
+            msg: document.getElementById('messageInput').value,
+            color: document.getElementById('textColorInput').value,
+            fontSize: document.getElementById('fontSizeRange').value,
+            posTop: textEl.style.top, // 좌표
+            posLeft: textEl.style.left,
+            posTransform: textEl.style.transform,
+            weatherTop: weatherEl.style.top,
+            weatherLeft: weatherEl.style.left,
+            savedWeather: {
+                temp: weatherTemp,
+                city: weatherCity,
+                iconUrl: weatherIconSrc
+            }
+        };
+
+        let list = JSON.parse(localStorage.getItem(storageKey)) || [];
+        if (id) {
+            const idx = list.findIndex(x => x.id == dataObj.id);
+            if (idx > -1) list[idx] = dataObj;
+        } else {
+            list.push(dataObj);
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(list)); // 유저별 키로 저장
+        alertModal('저장되었습니다!', () => { window.location.href = '/'; });
+    }
+
+    function checkEditMode(editId) {
+        const currentUser = localStorage.getItem('user');
+        if (!currentUser) return;
+
+        const storageKey = 'watchList_' + currentUser;
+        const list = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const item = list.find(x => x.id == editId);
+        if (!item) return;
+
+        const elId = document.getElementById('editId'); if (elId) elId.value = item.id;
+        const elPixel = document.getElementById('pixelRange'); if (elPixel) elPixel.value = item.pixelVal || 10;
+        const elAlarm = document.getElementById('alarmTime'); if (elAlarm) elAlarm.value = item.alarm;
+        const elMsg = document.getElementById('messageInput'); if (elMsg) elMsg.value = item.msg;
+        const elColor = document.getElementById('textColorInput'); if (elColor) elColor.value = item.color;
+
+        const fSize = item.fontSize || 24;
+        const elFont = document.getElementById('fontSizeRange'); if (elFont) elFont.value = fSize;
+        const elFontDisp = document.getElementById('fontSizeDisplay'); if (elFontDisp) elFontDisp.innerText = fSize + "px";
+
+
+        const textEl = document.getElementById('dragText');
+        if (textEl) {
+            textEl.innerText = item.msg || "문구 입력";
+            textEl.style.color = item.color;
+            textEl.style.fontSize = fSize + "px";
+            if (item.posTop) {
+                textEl.style.top = item.posTop;
+                textEl.style.left = item.posLeft;
+                textEl.style.transform = item.posTransform;
+            }
+        }
+
+
+        if (item.weatherTop) {
+            const weatherEl = document.getElementById('weatherLayer');
+            if (weatherEl) {
+                weatherEl.style.top = item.weatherTop;
+                weatherEl.style.left = item.weatherLeft;
+            }
+        }
+
+        if (item.savedWeather && item.savedWeather.city) {
+            getWeatherByCity(item.savedWeather.city);
+        } else {
+            loadWeather();
+        }
+
+        if (item.imgSrc) {
+            originalImgSrc = item.imgSrc;
+            currentImg.src = item.imgSrc;
+            currentImg.onload = () => {
+                isImageLoaded = true;
+                const c = document.getElementById('mainCanvas');
+                if (c) {
+                    resetCanvas(c.getContext('2d'));
+                    renderCanvas();
+                }
+            };
+        }
+    }
+</script>

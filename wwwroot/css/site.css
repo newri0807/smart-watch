@@ -1,0 +1,252 @@
+/* === [1. 기본 설정 및 변수] === */
+:root {
+    --primary: #4a90e2;
+    --bg-color: #f0f2f5;
+    --card-radius: 16px;
+    --nav-height: 60px;
+    --header-height: 50px;
+}
+
+/* [핵심 1] 전체 화면 스크롤 방지 */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    height: 100vh; /* 화면 꽉 채움 */
+    overflow: hidden; /* 브라우저 자체 스크롤 제거 */
+}
+
+/* === [2. 모바일 레이아웃 프레임] === */
+.mobile-container {
+    width: 100%;
+    max-width: 430px;
+    background-color: white;
+    height: 100vh; /* 높이 고정 */
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column; /* 세로 배치 (Header - Main - Footer) */
+    overflow: hidden; /* 컨테이너 밖으로 나가는 것 숨김 */
+}
+
+/* [핵심 2] 메인 컨텐츠 영역만 스크롤 허용 */
+main {
+    flex: 1; /* 남은 공간 모두 차지 */
+    overflow-y: auto; /* 내용 넘치면 스크롤 생성 */
+    overflow-x: hidden;
+    padding-bottom: calc(var(--nav-height) + 20px); /* 하단 네비 가림 방지 */
+    position: relative;
+    
+    /* 스크롤바 숨기기 (깔끔한 UI 위함) */
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+}
+main::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+
+/* === [3. 헤더 (고정)] === */
+/* 주의: 헤더가 main 안에 있다면 sticky, 밖에 있다면 flex 구조상 고정됨 */
+/* 현재 구조상 main 안에 header가 포함되는 구조이므로 sticky 사용 */
+.app-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+    
+    /* [핵심 3] 스크롤 시 상단 고정 */
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+.back-btn { text-decoration: none; color: #333; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+
+
+/* === [4. 하단 네비게이션 (고정)] === */
+.bottom-nav {
+    position: absolute; /* mobile-container 기준 하단 고정 */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--nav-height);
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #eee;
+    z-index: 1000;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: #aaa;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.nav-item i { font-size: 1.2rem; }
+.nav-item.active { color: var(--primary); font-weight: bold; }
+
+
+/* === [5. UI 컴포넌트] === */
+.card {
+    background: white;
+    border-radius: var(--card-radius);
+    padding: 20px;
+    margin: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.form-group { margin-bottom: 15px; }
+.form-control {
+    width: 100%; padding: 12px; border: 2px solid #eee;
+    border-radius: 12px; box-sizing: border-box; font-size: 1rem;
+}
+
+.btn-primary {
+    width: 100%; padding: 14px; background: var(--primary);
+    color: white; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+
+
+/* === [6. 리스트 카드 (Index)] === */
+.watch-list-container {
+    padding: 20px;
+    background: #f4f4f8;
+    /* min-height를 제거하고 flex:1인 main이 높이를 관리함 */
+}
+
+.watch-card {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    background-color: #ddd;
+    transition: transform 0.2s;
+}
+.watch-card:active { transform: scale(0.98); }
+
+.card-bg {
+    width: 100%; height: 100%;
+    background-size: cover; background-position: center;
+    image-rendering: pixelated; 
+}
+
+.card-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 20px; display: flex; flex-direction: column; justify-content: flex-end;
+}
+
+.card-time {
+    font-size: 2.8rem; font-weight: 800; line-height: 1; color: white;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+.card-msg {
+    font-size: 1rem; color: rgba(255,255,255,0.9); margin-top: 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-actions {
+    position: absolute; top: 15px; right: 15px; display: flex; gap: 10px;
+}
+.icon-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.9); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; cursor: pointer; color: #333;
+}
+.btn-edit { color: var(--primary); }
+.btn-del { color: #ff4757; }
+
+
+/* === [7. 에디터 스타일] === */
+.editor-container {
+    background: #f4f4f8;
+    /* 스크롤은 main이 담당하므로 min-height 관련 속성 조정 */
+    padding-bottom: 40px;
+}
+
+.preview-area {
+    background: #f8f9fa; padding: 20px 0;
+    display: flex; flex-direction: column; align-items: center;
+    border-bottom: 1px solid #eee;
+}
+.preview-wrapper {
+    background: #e0e0e0; padding: 30px 0;
+    display: flex; flex-direction: column; align-items: center;
+}
+.canvas-box {
+    width: 300px; height: 300px; background: #fff;
+    border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    position: relative; overflow: hidden; touch-action: none;
+}
+canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+.draggable-text {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 24px; font-weight: bold; color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8); cursor: grab; white-space: nowrap; user-select: none;
+}
+.draggable-text:active { cursor: grabbing; }
+
+.settings-panel { padding: 20px; }
+.setting-card {
+    background: white; padding: 20px; border-radius: 16px; margin-bottom: 20px;
+}
+.control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+.sub-label { font-size: 0.9rem; color: #666; font-weight: 600; }
+
+input[type="file"] { display: none; }
+.custom-file-upload {
+    display: block; width: 100%; text-align: center; padding: 12px;
+    background: #f0f2f5; color: #333; border-radius: 10px; cursor: pointer; border: 1px dashed #ccc;
+}
+.custom-range { width: 100%; margin-top: 10px; accent-color: var(--primary); }
+.custom-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; }
+.color-picker { border: none; width: 40px; height: 40px; background: none; cursor: pointer; }
+.save-btn-bottom {
+    width: 100%; background: var(--primary); color: white; font-size: 1.1rem;
+    font-weight: bold; padding: 16px; border: none; border-radius: 14px;
+    cursor: pointer; margin-top: 10px;
+}
+
+
+/* === [8. 공통 모달 & Toast] === */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 2000;
+    display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);
+}
+.modal-box {
+    background: white; width: 85%; max-width: 350px; border-radius: 20px;
+    padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: popIn 0.3s;
+}
+@keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.modal-title { margin: 0 0 15px 0; font-size: 1.2rem; color: #333; }
+.btn-primary-sm { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+.btn-secondary { background: #eee; color: #555; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end;margin: 10px 0 0; }
+
+/* 빈 상태 스타일 */
+.empty-state { text-align: center; padding-top: 60px; color: #aaa; }
+.empty-icon { font-size: 3rem; margin-bottom: 20px; color: #ddd; }
+.create-btn {
+    background: var(--primary); color: white; padding: 12px 25px; border-radius: 25px;
+    text-decoration: none; font-weight: bold; display: inline-block;
+}

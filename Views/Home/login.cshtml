@@ -1,0 +1,265 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="deco-circle circle-1"></div>
+<div class="deco-circle circle-2"></div>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i class="fas fa-stopwatch"></i>
+            </div>
+            <h2 class="app-title">Smart Watch<br>Manager</h2>
+            <p class="app-subtitle">나만의 워치페이스를 디자인하세요</p>
+        </div>
+
+        <div class="input-area">
+            <div class="input-group">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" id="username" class="styled-input" placeholder="아이디" />
+            </div>
+
+            <div class="input-group">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="password" class="styled-input" placeholder="비밀번호" />
+            </div>
+
+            <button onclick="handleLogin()" class="btn-login">
+                로그인 <i class="fas fa-arrow-right" style="margin-left:5px;"></i>
+            </button>
+        </div>
+
+        <div class="footer-links">
+            <span>계정이 없으신가요?</span>
+            <a href="javascript:void(0);" onclick="alertModal('준비 중입니다.')">회원가입</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 배경 및 레이아웃 */
+    .login-wrapper {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        position: relative;
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    /* 장식용 배경 원 */
+    .deco-circle {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.6;
+        z-index: 1;
+    }
+
+    .circle-1 {
+        width: 300px;
+        height: 300px;
+        background: #4a90e2;
+        top: -100px;
+        right: -50px;
+        filter: blur(80px);
+        opacity: 0.2;
+    }
+
+    .circle-2 {
+        width: 250px;
+        height: 250px;
+        background: #ff6b6b;
+        bottom: -50px;
+        left: -50px;
+        filter: blur(80px);
+        opacity: 0.15;
+    }
+
+    /* 로그인 카드 */
+    .login-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        width: 85%;
+        max-width: 380px;
+        padding: 40px 30px;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        margin: 5%;
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* 로고 스타일 */
+    .logo-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #4a90e2, #357abd);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        color: white;
+        font-size: 2.5rem;
+        box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    .app-title {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #333;
+        line-height: 1.2;
+    }
+
+    .app-subtitle {
+        margin: 10px 0 30px;
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    /* 입력 필드 스타일 */
+    .input-group {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        color: #aaa;
+        font-size: 1.1rem;
+        transition: color 0.3s;
+    }
+
+    .styled-input {
+        width: 100%;
+        padding: 15px 15px 15px 45px;
+        /* 아이콘 공간 확보 */
+        border: 2px solid #f0f2f5;
+        background: #f9f9f9;
+        border-radius: 12px;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s;
+        box-sizing: border-box;
+    }
+
+    .styled-input:focus {
+        background: white;
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    }
+
+    .styled-input:focus+.input-icon,
+    .input-group:focus-within .input-icon {
+        color: #4a90e2;
+    }
+
+    /* 버튼 스타일 */
+    .btn-login {
+        width: 100%;
+        padding: 16px;
+        margin-top: 10px;
+        background: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+    }
+
+    .btn-login:active {
+        transform: scale(0.98);
+        background: #357abd;
+    }
+
+    /* 하단 링크 */
+    .footer-links {
+        margin-top: 25px;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .footer-links a {
+        color: #4a90e2;
+        text-decoration: none;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+</style>
+
+<script>
+    function handleLogin() {
+        const id = document.getElementById('username').value;
+        const pw = document.getElementById('password').value;
+
+        // 버튼 클릭 효과
+        const btn = document.querySelector('.btn-login');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 로그인 중...';
+
+        setTimeout(() => {
+            if (id && pw) {
+                localStorage.setItem('user', id);
+
+                // 성공 시 공통 모달 사용
+                if (typeof alertModal === 'function') {
+                    localStorage.setItem('user', id);
+                    alertModal('환영합니다!', () => {
+                        window.location.href = '/';
+                    });
+                } else {
+                    localStorage.setItem('user', id);
+                    alert('환영합니다!');
+                    window.location.href = '/';
+                }
+            } else {
+                // 실패 시 버튼 원복
+                btn.innerHTML = '로그인 <i class="fas fa-arrow-right" style="margin-left:5px;"></i>';
+
+                if (typeof alertModal === 'function') {
+                    alertModal('아이디와 비밀번호를 모두 입력하세요.');
+                } else {
+                    alert('아이디와 비밀번호를 입력하세요.');
+                }
+            }
+        }, 500); // 0.5초 딜레이로 UX 향상
+    }
+</script>// ... (기존 코드)
+localStorage.setItem('user', id); // 'user'라는 키에 아이디 저장됨 (예: 'admin')

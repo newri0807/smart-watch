@@ -1,0 +1,336 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="app-header">
+    <span class="page-title">내 시계 목록</span>
+    <span class="badge" id="countBadge">0</span>
+</div>
+
+<div id="watchList" class="watch-list-container"></div>
+
+<style>
+    /* 헤더 */
+    .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-bottom: 1px solid #eee;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        height: 50px;
+    }
+
+    .page-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #333;
+    }
+
+    .badge {
+        background: #4a90e2;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    /* 컨테이너 */
+    .watch-list-container {
+        padding: 20px;
+        background: #f4f4f8;
+        min-height: calc(100vh - 120px);
+    }
+
+    /* 카드 디자인 */
+    .watch-card {
+        position: relative;
+        width: 100%;
+        height: 220px;
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        background-color: #ddd;
+        transition: transform 0.2s;
+    }
+
+    .watch-card:active {
+        transform: scale(0.98);
+    }
+
+    .card-bg {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        image-rendering: pixelated;
+    }
+
+    .card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* 카드 내부 날씨 뱃지 */
+    .card-top-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .weather-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .weather-pill img {
+        width: 24px;
+        height: 24px;
+    }
+
+    .weather-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .temp-text {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .city-text {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        font-weight: 400;
+    }
+
+    /* 하단 정보 */
+    .card-bottom-info {
+        text-align: left;
+        color: white;
+    }
+
+    .time-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .card-time {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .alarm-icon {
+        font-size: 1.4rem;
+        color: #ffd700;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    }
+
+    .card-msg {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.95);
+        margin-top: 6px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 버튼 */
+    .card-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        color: #333;
+    }
+
+    .btn-edit {
+        color: #4a90e2;
+    }
+
+    .btn-del {
+        color: #ff4757;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding-top: 60px;
+        color: #aaa;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: #ddd;
+    }
+
+    .create-btn {
+        background: #4a90e2;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(74, 144, 226, 0.4);
+        display: inline-block;
+    }
+
+    @@keyframes popIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof checkAuth === 'function') checkAuth();
+        loadWatchList();
+    });
+
+    // === 리스트 로직 (저장된 날씨 사용) ===
+    function loadWatchList() {
+        // 현재 로그인한 유저 ID 가져오기
+        const currentUser = localStorage.getItem('user');
+
+        if (!currentUser) {
+            window.location.href = '/Home/Login';
+            return;
+        }
+
+        const storageKey = 'watchList_' + currentUser;
+        const list = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const container = document.getElementById('watchList');
+        document.getElementById('countBadge').innerText = list.length;
+        container.innerHTML = "";
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-layer-group empty-icon"></i>
+                    <div class="empty-text">저장된 시계가 없습니다.<br>나만의 시계를 꾸며보세요!</div>
+                    <a href="/Home/Editor" class="create-btn"><i class="fas fa-plus"></i> 시계 만들기</a>
+                </div>`;
+            return;
+        }
+
+        list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'watch-card';
+
+            const displayImg = item.thumbnailSrc || item.imgSrc;
+            const bgStyle = displayImg
+                ? `background-image: url('${displayImg}');`
+                : 'background-color: #555;';
+
+            // 저장된 날씨 데이터 사용 (item.savedWeather)
+            let weatherHtml = '';
+
+            if (item.savedWeather) {
+                weatherHtml = `
+                    <div class="weather-pill">
+                        <img src="${item.savedWeather.iconUrl}" alt="weather">
+                        <div class="weather-text">
+                            <span class="temp-text">${item.savedWeather.temp}</span>
+                            <span class="city-text">${item.savedWeather.city}</span>
+                        </div>
+                    </div>`;
+            } else {
+                weatherHtml = `
+                    <div class="weather-pill" style="opacity:0.5">
+                        <span style="font-size:0.8rem">No Weather Info</span>
+                    </div>`;
+            }
+
+            div.innerHTML = `
+                <div class="card-bg" style="${bgStyle}"></div>
+                
+                <div class="card-overlay">
+                    <div class="card-top-info">
+                        ${weatherHtml}
+                        <div class="card-actions">
+                            <a href="/Home/Editor?id=${item.id}" class="icon-btn btn-edit"><i class="fas fa-pen"></i></a>
+                            <button onclick="deleteWatch(${item.id})" class="icon-btn btn-del"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="card-bottom-info">
+                        <div class="time-row">
+                            <div class="card-time">${item.alarm || '--:--'}</div>
+                            <i class="fas fa-bell alarm-icon"></i> 
+                        </div>
+                        <div class="card-msg" style="color:${item.color}">${item.msg || '문구 없음'}</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // 삭제 기능
+    function deleteWatch(id) {
+        if (typeof showModal === 'function') {
+            showModal('삭제 확인', '정말 삭제하시겠습니까?', () => { performDelete(id); return true; }, true);
+        } else {
+            if (confirm('삭제하시겠습니까?')) performDelete(id);
+        }
+    }
+
+    function performDelete(id) {
+        const currentUser = localStorage.getItem('user');
+        if (!currentUser) return;
+
+        const storageKey = 'watchList_' + currentUser;
+        let list = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+        list = list.filter(item => item.id !== id);
+        localStorage.setItem(storageKey, JSON.stringify(list)); // 해당 유저 키로 저장
+        loadWatchList();
+    }
+
+</script>
