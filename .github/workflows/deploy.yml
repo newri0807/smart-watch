@@ -1,0 +1,31 @@
+name: Deploy C#
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: SSH Remote Commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        script: |
+          echo "🚀 C# 배포 시작..."
+          
+          # 1. 최신 코드 받기
+          cd ~/deploy/repo-smartwatch
+          git pull origin main
+
+          # 2. .env 파일 생성/갱신 (덮어쓰기 방식이 더 깔끔함)
+          cd ~/deploy          
+          echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" > .env
+
+          # 3. 도커 재시작
+          # --build: 코드 변경사항 반영을 위해 이미지 다시 빌드
+          docker compose up -d --build smart-watch
+          
+          echo "✅ 배포 완료! API Key가 안전하게 주입되었습니다."
