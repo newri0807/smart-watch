@@ -17,21 +17,21 @@ jobs:
         script: |
           echo "🚀 C# (SmartWatch) '클린' 배포 시작..."
           
-          # 1. 기존 폴더가 있으면 과감하게 삭제 (권한 문제/충돌 방지)
-          if [ -d "~/deploy/repo-smartwatch" ]; then
-            sudo rm -rf ~/deploy/repo-smartwatch
-          fi
+          # 1. 무조건 강제 삭제 (에러 방지 || true 추가)
+          sudo rm -rf /home/ubuntu/deploy/repo-smartwatch || true
           
-          # 2. 깨끗한 상태에서 새로 다운로드
-          cd ~/deploy
-          git clone https://github.com/newri0807/smart-watch.git repo-smartwatch
+          # 2. 메인 브랜치 강제 다운로드
+          cd /home/ubuntu/deploy
+          git clone -b main https://github.com/newri0807/smart-watch.git repo-smartwatch
           
-          # 3. .env 설정 (기존 DB 설정은 건드리지 않고, API KEY만 갱신)
-          # SMARTWATCH_API_KEY 줄이 있으면 지우고, 맨 뒤에 새로 추가
+          # 3. 실행 위치 확인 (.env가 있는 곳)
+          cd /home/ubuntu/deploy
+          
+          # 4. .env 설정 (기존 DB 설정 유지, API KEY만 교체)
           sed -i '/SMARTWATCH_API_KEY/d' .env
           echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" >> .env
           
-          # 4. 도커 실행
+          # 5. 도커 실행
           docker compose up -d --build smart-watch
           
           echo "✅ C# 배포 완료!"
