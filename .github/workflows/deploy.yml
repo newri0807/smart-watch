@@ -19,7 +19,8 @@ jobs:
           
           # 1. 최신 코드 받기
           cd ~/deploy/repo-smartwatch
-          git pull origin main
+          git fetch --all
+          git reset --hard origin/main
 
           # 2. 실행 위치 이동
           cd ~/deploy
