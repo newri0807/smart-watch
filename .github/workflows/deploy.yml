@@ -2,7 +2,7 @@ name: Deploy C#
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:      # 👈 이 줄을 추가해야 버튼 생성됨!    
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -15,22 +15,23 @@ jobs:
         username: ${{ secrets.SERVER_NAME }}
         key: ${{ secrets.SERVER_ACCESS_KEY }}
         script: |
-          echo "🚀 C# 배포 시작..."
+          echo "🚀 C# (SmartWatch) '클린' 배포 시작..."
           
-          # 1. 최신 코드 받기
-          cd ~/deploy/repo-smartwatch
-          git fetch --all
-          git reset --hard origin/main
-
-          # 2. 실행 위치 이동
+          # 1. 기존 폴더가 있으면 과감하게 삭제 (권한 문제/충돌 방지)
+          if [ -d "~/deploy/repo-smartwatch" ]; then
+            sudo rm -rf ~/deploy/repo-smartwatch
+          fi
+          
+          # 2. 깨끗한 상태에서 새로 다운로드
           cd ~/deploy
+          git clone https://github.com/newri0807/smart-watch.git repo-smartwatch
           
-          # 3. .env에 키 추가 (덮어쓰기 방지 로직)
-          # 이미 키가 있으면 지우고 다시 추가 (중복 방지)
+          # 3. .env 설정 (기존 DB 설정은 건드리지 않고, API KEY만 갱신)
+          # SMARTWATCH_API_KEY 줄이 있으면 지우고, 맨 뒤에 새로 추가
           sed -i '/SMARTWATCH_API_KEY/d' .env
           echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" >> .env
-
-          # 4. 도커 재시작
+          
+          # 4. 도커 실행
           docker compose up -d --build smart-watch
           
           echo "✅ C# 배포 완료!"
