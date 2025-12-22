@@ -2,6 +2,7 @@ name: Deploy C#
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:      # 👈 이 줄을 추가해야 버튼 생성됨!    
 
 jobs:
   deploy:
