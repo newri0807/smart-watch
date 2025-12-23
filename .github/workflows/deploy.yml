@@ -15,30 +15,28 @@ jobs:
         username: ${{ secrets.SERVER_NAME }}
         key: ${{ secrets.SERVER_ACCESS_KEY }}
         script: |
-            echo "🚀 C# (SmartWatch) '클린' 배포 시작..."
-            
-            # 1. 기존 레포 삭제 및 클론
-            sudo rm -rf /home/ubuntu/deploy/repo-smartwatch || true
-            cd /home/ubuntu/deploy
-            git clone -b main https://github.com/newri0807/smart-watch.git repo-smartwatch
-            
-            # 2. .env 파일 안전하게 생성/수정
-            # 파일이 없으면 만들고, 있으면 해당 키만 교체하는 로직
-            touch .env
-            sed -i '/^SMARTWATCH_API_KEY=/d' .env
-            echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" >> .env
-            
-            # 3. docker-compose.yml이 있는 위치로 확실히 이동
-            cd /home/ubuntu/deploy
-            
-            # 4. 도커 실행 전 변수 확인 
-            echo "🔎 .env 파일 내 변수 존재 확인:"
-            grep "SMARTWATCH_API_KEY" .env || echo "⚠️ 변수가 설정되지 않았습니다!"
-            
-            # 5. 도커 실행
-            docker compose up -d --build smart-watch
-            
-            echo "✅ C# 배포 완료!"
-
+          echo "🚀 C# (SmartWatch) 배포 시작..."
+          
+          # 1. 기존 레포 삭제 및 최신 소스 클론
+          sudo rm -rf /home/ubuntu/deploy/repo-smartwatch || true
+          cd /home/ubuntu/deploy
+          git clone -b main https://github.com/newri0807/smart-watch.git repo-smartwatch
+          
+          # 2. appsettings.json 파일이 있는 폴더로 이동
+          cd /home/ubuntu/deploy/repo-smartwatch
+          
+          # 3. appsettings.json의 ApiKey 값을 GitHub Secret으로 치환
+          # "ApiKey": "값" 형태를 찾아서 "ApiKey": "실제키"로 바꿉니다.
+          sed -i '/"Weather":/,/"ApiKey":/ s/"ApiKey":\s*".*"/"ApiKey": "${{ secrets.SMARTWATCH_API_KEY }}"/' appsettings.json      
+  
+          # 4. 치환 결과 살짝 확인 (보안상 앞부분만)
+          echo "🔎 appsettings.json ApiKey 적용 확인:"
+          grep "ApiKey" appsettings.json | cut -c1-30
+          
+          # 5. docker-compose.yml이 있는 상위 폴더로 이동 후 실행
+          cd /home/ubuntu/deploy
+          docker compose up -d --build smart-watch
+          
+          echo "✅ C# 배포 완료 및 서비스 재시작 성공!"
         
       
