@@ -15,23 +15,30 @@ jobs:
         username: ${{ secrets.SERVER_NAME }}
         key: ${{ secrets.SERVER_ACCESS_KEY }}
         script: |
-          echo "🚀 C# (SmartWatch) '클린' 배포 시작..."
-          
-          # 1. 무조건 강제 삭제 (에러 방지 || true 추가)
-          sudo rm -rf /home/ubuntu/deploy/repo-smartwatch || true
-          
-          # 2. 메인 브랜치 강제 다운로드
-          cd /home/ubuntu/deploy
-          git clone -b main https://github.com/newri0807/smart-watch.git repo-smartwatch
-          
-          # 3. 실행 위치 확인 (.env가 있는 곳)
-          cd /home/ubuntu/deploy
-          
-          # 4. .env 설정 (기존 DB 설정 유지, API KEY만 교체)
-          sed -i '/SMARTWATCH_API_KEY/d' .env
-          echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" >> .env
-          
-          # 5. 도커 실행
-          docker compose up -d --build smart-watch
-          
-          echo "✅ C# 배포 완료!"
+            echo "🚀 C# (SmartWatch) '클린' 배포 시작..."
+            
+            # 1. 기존 레포 삭제 및 클론
+            sudo rm -rf /home/ubuntu/deploy/repo-smartwatch || true
+            cd /home/ubuntu/deploy
+            git clone -b main https://github.com/newri0807/smart-watch.git repo-smartwatch
+            
+            # 2. .env 파일 안전하게 생성/수정
+            # 파일이 없으면 만들고, 있으면 해당 키만 교체하는 로직
+            touch .env
+            sed -i '/^SMARTWATCH_API_KEY=/d' .env
+            echo "SMARTWATCH_API_KEY=${{ secrets.SMARTWATCH_API_KEY }}" >> .env
+            
+            # 3. docker-compose.yml이 있는 위치로 확실히 이동
+            cd /home/ubuntu/deploy
+            
+            # 4. 도커 실행 전 변수 확인 
+            echo "🔎 .env 파일 내 변수 존재 확인:"
+            grep "SMARTWATCH_API_KEY" .env || echo "⚠️ 변수가 설정되지 않았습니다!"
+            
+            # 5. 도커 실행
+            docker compose up -d --build smart-watch
+            
+            echo "✅ C# 배포 완료!"
+
+        
+      
