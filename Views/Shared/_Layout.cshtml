@@ -16,7 +16,7 @@
 <body>
     <div class="mobile-container">
         <main role="main"
-            style="@(ViewContext.RouteData.Values["Action"]?.ToString() != "Login" ? "overflow-y: hidden;" : "")">
+            style="@(Context.Request.Path.ToString().Contains("/Home/Login", StringComparison.OrdinalIgnoreCase) ? "overflow-y: hidden;" : "")">
             @RenderBody()
         </main>
 
